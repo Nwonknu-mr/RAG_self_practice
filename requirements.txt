@@ -1,0 +1,11 @@
+lancedb
+langchain
+pypdf
+python-docx
+unstructured[docx,pdf]
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+nltk
+numpy
