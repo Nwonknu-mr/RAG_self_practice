@@ -163,6 +163,3 @@ tmp/
 .idea/
 *.swp
 *.swo
-
-# 错误创建的文件夹
-setup_dual_remote.bat/
