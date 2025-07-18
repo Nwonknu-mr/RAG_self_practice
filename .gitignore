@@ -137,3 +137,32 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 .DS_Store
+
+# RAG项目特定文件
+# 数据库文件 - 可通过脚本重建
+db/
+*.lance
+*.db
+
+# 大型数据文件 - 可选择性上传
+data/large_documents/
+data/embeddings/
+
+# 模型缓存
+.cache/
+models/
+
+# 临时文件
+temp/
+tmp/
+*.bak
+*.orig
+
+# IDE特定文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 错误创建的文件夹
+setup_dual_remote.bat/
