@@ -250,3 +250,15 @@ RAG系统是Retrieval-Augmented Generation的缩写，指一种结合了向量�
 
 我是DeepSeek-R1，一个由深度求索公司开发的智能助手，我会尽我所能为您提供帮助。
 
+
+=== 问答记录 ===
+时间: 2025-07-18 14:05:50
+问题: 什么是人工智能？
+回答: 抱歉，API请求失败: HTTPConnectionPool(host='192.168.188.146', port=1234): Max retries exceeded with url: /v1/chat/completions (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x13a2cdb40>: Failed to establish a new connection: [Errno 61] Connection refused'))
+
+
+=== 问答记录 ===
+时间: 2025-07-18 14:10:56
+问题: 什么是人工智能？
+回答: 人工智能是一门研究如何让计算机模拟人类智能的科学技术。它包括机器学习、深度学习、自然语言处理等多个分支领域。由于当前使用本地模式，建议您查阅专业资料获得更详细的信息。
+
