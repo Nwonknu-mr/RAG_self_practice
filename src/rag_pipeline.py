@@ -1,13 +1,17 @@
-import requests
+import os
+from datetime import datetime
 from typing import Any, Dict, List
 
+import requests
+
 from src.config import (
-    LANCEDB_TABLE_NAME, TOP_K, get_logger,
-    DEEPSEEK_API_BASE, DEEPSEEK_CHAT_MODEL
+    DEEPSEEK_API_BASE,
+    DEEPSEEK_CHAT_MODEL,
+    LANCEDB_TABLE_NAME,
+    TOP_K,
+    get_logger,
 )
 from src.vector_store import get_db_connection, search_vector_store
-from datetime import datetime
-import os
 
 # 获取模块专用的logger
 logger = get_logger(__name__)
@@ -42,18 +46,16 @@ def call_deepseek_api(prompt: str, system_message: str = None) -> str:
         # 重新构建为聊天格式
         chat_request = {
             "model": DEEPSEEK_CHAT_MODEL,
-            "messages": [
-                {"role": "user", "content": full_input}
-            ],
+            "messages": [{"role": "user", "content": full_input}],
             "max_tokens": 1000,
-            "temperature": 0.7
+            "temperature": 0.7,
         }
 
         response = requests.post(
             chat_url,
             json=chat_request,
             headers={"Content-Type": "application/json"},
-            timeout=60
+            timeout=60,
         )
 
         response.raise_for_status()
@@ -104,7 +106,7 @@ def save_qa_to_knowledge_base(question: str, answer: str):
 """
 
         # 追加到文件
-        with open(KNOWLEDGE_BASE_FILE, 'a', encoding='utf-8') as f:
+        with open(KNOWLEDGE_BASE_FILE, "a", encoding="utf-8") as f:
             f.write(qa_content)
 
         logger.info(f"已将问答对保存到知识库: {KNOWLEDGE_BASE_FILE}")
@@ -127,7 +129,7 @@ def check_relevance(retrieved_context: list) -> bool:
         return False
 
     # 检查最高相似度分数
-    max_score = max(item.get('score', 0) for item in retrieved_context)
+    max_score = max(item.get("score", 0) for item in retrieved_context)
 
     logger.info(f"最高相似度分数: {max_score}, 阈值: {RELEVANCE_THRESHOLD}")
 
@@ -147,8 +149,7 @@ def build_prompt(query: str, context: List[Dict[str, Any]]) -> str:
 
     context_str = "\n\n---\n\n".join(
         [
-            f"来源: {item['metadata'].get('source', 'N/A')}\n"
-            f"内容: {item['text']}"
+            f"来源: {item['metadata'].get('source', 'N/A')}\n内容: {item['text']}"
             for item in context
         ]
     )
@@ -216,10 +217,12 @@ def get_rag_response(query: str) -> Dict[str, Any]:
 
         if is_relevant:
             # 相关度高，使用检索到的上下文
-            context_str = "\n\n".join([
-                f"文档 {i+1}:\n来源: {doc.get('metadata', {}).get('source', '未知')}\n内容: {doc.get('text', '')}"
-                for i, doc in enumerate(retrieved_context)
-            ])
+            context_str = "\n\n".join(
+                [
+                    f"文档 {i + 1}:\n来源: {doc.get('metadata', {}).get('source', '未知')}\n内容: {doc.get('text', '')}"
+                    for i, doc in enumerate(retrieved_context)
+                ]
+            )
 
             system_message = (
                 "你是一个有用的AI助手。请根据提供的上下文信息回答用户的问题。"
@@ -267,6 +270,3 @@ def get_rag_response(query: str) -> Dict[str, Any]:
             "llm_answer": f"抱歉，处理您的查询时遇到了问题: {str(e)}",
             "retrieved_context": [],
         }
-
-
-

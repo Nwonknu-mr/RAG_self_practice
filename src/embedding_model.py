@@ -1,9 +1,9 @@
-import threading
-from typing import List, Union, Optional
-import requests
 import json
+import threading
+from typing import List, Optional, Union
 
 import numpy as np
+import requests
 
 from src.config import DEEPSEEK_API_BASE, DEEPSEEK_EMBEDDING_MODEL, get_logger
 
@@ -62,14 +62,14 @@ class EmbeddingModel:
             for text in texts:
                 request_data = {
                     "text": text,
-                    "mode": "topic"  # 使用主题分析模式
+                    "mode": "topic",  # 使用主题分析模式
                 }
 
                 response = requests.post(
                     analyze_url,
                     json=request_data,
                     headers={"Content-Type": "application/json"},
-                    timeout=30
+                    timeout=30,
                 )
 
                 response.raise_for_status()
@@ -105,38 +105,46 @@ class EmbeddingModel:
             logger.error(f"调用DeepSeek分析API时发生未知错误: {e}")
             return None
 
-    def _extract_features_from_analysis(self, analysis_result: dict, text: str) -> Optional[np.ndarray]:
+    def _extract_features_from_analysis(
+        self, analysis_result: dict, text: str
+    ) -> Optional[np.ndarray]:
         """从分析结果中提取数值特征向量。"""
         try:
             features = []
 
             # 基础文本统计特征
-            features.extend([
-                len(text),  # 文本长度
-                len(text.split()),  # 词数
-                len(set(text.split())),  # 唯一词数
-                text.count('。'),  # 句号数量
-                text.count('，'),  # 逗号数量
-            ])
+            features.extend(
+                [
+                    len(text),  # 文本长度
+                    len(text.split()),  # 词数
+                    len(set(text.split())),  # 唯一词数
+                    text.count("。"),  # 句号数量
+                    text.count("，"),  # 逗号数量
+                ]
+            )
 
             # 从分析结果中提取特征
-            if 'sentiment' in analysis_result:
-                sentiment = analysis_result['sentiment']
+            if "sentiment" in analysis_result:
+                sentiment = analysis_result["sentiment"]
                 if isinstance(sentiment, (int, float)):
                     features.append(sentiment)
                 elif isinstance(sentiment, dict):
-                    features.extend([
-                        sentiment.get('positive', 0),
-                        sentiment.get('negative', 0),
-                        sentiment.get('neutral', 0)
-                    ])
+                    features.extend(
+                        [
+                            sentiment.get("positive", 0),
+                            sentiment.get("negative", 0),
+                            sentiment.get("neutral", 0),
+                        ]
+                    )
 
-            if 'topics' in analysis_result:
-                topics = analysis_result['topics']
+            if "topics" in analysis_result:
+                topics = analysis_result["topics"]
                 if isinstance(topics, list):
                     # 取前10个主题的权重
-                    topic_weights = [topic.get('weight', 0) if isinstance(topic, dict) else 0
-                                   for topic in topics[:10]]
+                    topic_weights = [
+                        topic.get("weight", 0) if isinstance(topic, dict) else 0
+                        for topic in topics[:10]
+                    ]
                     features.extend(topic_weights)
                     # 补齐到10个
                     while len(topic_weights) < 10:
@@ -161,18 +169,20 @@ class EmbeddingModel:
         features = []
 
         # 基础统计特征
-        features.extend([
-            len(text),
-            len(text.split()),
-            len(set(text.split())),
-            text.count('。'),
-            text.count('，'),
-            text.count('的'),
-            text.count('是'),
-            text.count('在'),
-            text.count('有'),
-            text.count('和'),
-        ])
+        features.extend(
+            [
+                len(text),
+                len(text.split()),
+                len(set(text.split())),
+                text.count("。"),
+                text.count("，"),
+                text.count("的"),
+                text.count("是"),
+                text.count("在"),
+                text.count("有"),
+                text.count("和"),
+            ]
+        )
 
         # 字符频率特征
         char_counts = {}
@@ -180,7 +190,9 @@ class EmbeddingModel:
             char_counts[char] = char_counts.get(char, 0) + 1
 
         # 取最常见的字符频率
-        common_chars = sorted(char_counts.items(), key=lambda x: x[1], reverse=True)[:20]
+        common_chars = sorted(char_counts.items(), key=lambda x: x[1], reverse=True)[
+            :20
+        ]
         char_features = [count for _, count in common_chars]
         features.extend(char_features)
 
@@ -193,9 +205,7 @@ class EmbeddingModel:
 
         return np.array(features, dtype=np.float32)
 
-    def encode(
-        self, texts: Union[str, List[str]]
-    ) -> Union[np.ndarray, None]:
+    def encode(self, texts: Union[str, List[str]]) -> Union[np.ndarray, None]:
         """
         将单个文本或文本列表编码为向量嵌入。
 
@@ -232,5 +242,3 @@ class EmbeddingModel:
 
 # 单例实例，便于在整个应用程序中导入和使用
 embedding_model = EmbeddingModel()
-
-
