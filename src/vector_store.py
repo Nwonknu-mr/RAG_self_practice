@@ -1,6 +1,7 @@
 import json
+import uuid
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
-
+import sqlite3
 import lancedb  # type: ignore
 import pyarrow as pa  # type: ignore
 from langchain.docstore.document import Document
@@ -23,12 +24,32 @@ def get_db_connection() -> Optional[lancedb.DBConnection]:
     Returns:
         Optional[lancedb.DBConnection]: 数据库连接对象，如果连接失败则返回None
     """
+    vector_db, rel_db = None, None
     try:
         logger.info(f"正在连接到LanceDB: {LANCEDB_URI}")
-        return lancedb.connect(LANCEDB_URI)
+        vector_db = lancedb.connect(LANCEDB_URI)
+
+        rel_db = sqlite3.connect('example.db')
+
+        cursor = rel_db.cursor()
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS detail_para_chunk (
+                chunk_id INTEGER PRIMARY KEY,
+                chunk_content TEXT
+            )
+        """)
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS rel_para_sentence (
+                id INTEGER PRIMARY KEY,
+                chunk_id INTEGER,
+                sentence_id VARCHAR(64)
+            )
+        """)
+        rel_db.commit()
+        cursor.close()
     except Exception as e:
         logger.error(f"连接LanceDB失败: {e}")
-        return None
+        return vector_db, rel_db
 
 
 def create_or_get_table(
@@ -58,6 +79,7 @@ def create_or_get_table(
                 ),
                 pa.field("text", pa.string()),
                 pa.field("metadata", pa.string()),  # 将元数据存储为JSON字符串
+                pa.field("id", pa.string()), # 增加一个满足唯一性约束的ID字段
             ]
         )
         return db.create_table(table_name, schema=schema)
@@ -71,6 +93,7 @@ def add_documents_to_store(
 ) -> bool:
     """
     将文档列表编码并添加到指定的LanceDB表中。
+    备注：这里应该使用一个关系数据库（MYSQL，SQLite），关联段落和句子
 
     Args:
         documents: 要添加的文档列表
