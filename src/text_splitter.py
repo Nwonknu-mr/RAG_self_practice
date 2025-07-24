@@ -62,6 +62,7 @@ def split_documents(documents: List[Document]) -> List[Document]:
     for doc in documents:
         paragraph_chunks = paragraph_splitter.split_documents([doc])
         for i, para_chunk in enumerate(paragraph_chunks):
+            chunk_item = {'para': para_chunk, 'sentences': []}
             sentence_chunks = sentence_splitter.split_documents([para_chunk])
             for j, sent_chunk in enumerate(sentence_chunks):
                 # 丰富元数据
@@ -69,7 +70,8 @@ def split_documents(documents: List[Document]) -> List[Document]:
                 sent_chunk.metadata["source"] = source
                 sent_chunk.metadata["paragraph_num"] = i
                 sent_chunk.metadata["sentence_num_in_para"] = j
-                final_chunks.append(sent_chunk)
+                chunk_item['sentences'].appen(sent_chunk)
+            final_chunks.append(chunk_item)
 
     logger.info(
         f"Splitting complete. Generated {len(final_chunks)} chunks."
